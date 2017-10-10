@@ -74,3 +74,86 @@ git checkout -b develop origin/develop
 
 #### 小红和小明开始开发新功能
 
+![avater](https://raw.githubusercontent.com/quickhack/translations/master/git-workflows-and-tutorials/images/git-workflow-release-cycle-6maryjohnbeginnew.png)
+
+这个示例中，小红和小明开始各自的功能开发。他们需要为各自的功能创建相应的分支。新分支不是基于master分支，而是应该基于develop分支：
+
+git checkout -b some-feature develop
+
+他们用老套路添加提交到各自功能分支上：编辑、暂存、提交：
+git status
+git add
+git commit
+
+#### 小红完成功能开发
+
+![avater](https://raw.githubusercontent.com/quickhack/translations/master/git-workflows-and-tutorials/images/git-workflow-release-cycle-7maryfinishes.png)
+
+添加了提交后，小红觉得她的功能OK了。如果团队使用Pull Requests，这时候可以发起一个用于合并到develop分支。否则她可以直接合并到她本地的develop分支后push到中央仓库：
+
+git pull origin develop
+git checkout develop
+git merge some-feature
+git push
+git branch -d some-feature
+
+第一条命令在合并功能前确保develop分支是最新的。注意，功能决不应该直接合并到master分支。冲突解决方法和集中式工作流一样。
+
+#### 小红开始准备发布
+
+![avater](https://raw.githubusercontent.com/quickhack/translations/master/git-workflows-and-tutorials/images/git-workflow-release-cycle-8maryprepsrelease.png)
+
+这个时候小明正在实现他的功能，小红开始准备她的第一个项目正式发布。像功能开发一样，她用一个新的分支来做发布准备。这一步也确定了发布的版本号：
+
+git checkout -b release-0.1 develop
+
+这个分支是清理发布、执行所有测试、更新文档和其它为下个发布做准备操作的地方，像是一个专门用于改善发布的功能分支。
+
+只要小红创建这个分支并push到中央仓库，这个发布就是功能冻结的。任何不在develop分支中的新功能都推到下个发布循环中。
+
+#### 小红完成发布
+
+![avater](https://raw.githubusercontent.com/quickhack/translations/master/git-workflows-and-tutorials/images/git-workflow-release-cycle-9maryfinishes.png)
+
+一旦准备好了对外发布，小红合并修改到master分支和develop分支上，删除发布分支。合并回develop分支很重要，因为在发布分支中已经提交的更新需要在后面的新功能中也要是可用的。另外，如果小红的团队要求Code Review，这是一个发起Pull Request的理想时机。
+
+git checkout master
+git merge release-0.1
+git push
+git checkout develop
+git merge release-0.1
+git push
+git branch -d release-0.1
+
+发布分支是作为功能开发（develop分支）和对外发布（master分支）间的缓冲。只要有合并到master分支，就应该打好Tag以方便跟踪。
+
+git tag -a 0.1 -m "Initial public release" master
+git push --tags
+
+Git有提供各种勾子（hook），即仓库有事件发生时触发执行的脚本。可以配置一个勾子，在你push中央仓库的master分支时，自动构建好对外发布。
+
+#### 最终用户发现Bug
+
+![avater](https://raw.githubusercontent.com/quickhack/translations/master/git-workflows-and-tutorials/images/git-workflow-gitflow-enduserbug.png)
+
+对外发布后，小红回去和小明一起做下个发布的新功能开发，直到有最终用户开了一个Ticket抱怨当前版本的一个Bug。为了处理Bug，小红（或小明）从master分支上拉出了一个维护分支，提交修改以解决问题，然后直接合并回master分支：
+git checkout -b issue-#001 master
+# Fix the bug
+git checkout master
+git merge issue-#001
+git push
+
+就像发布分支，维护分支中新加这些重要修改需要包含到develop分支中，所以小红要执行一个合并操作。然后就可以安全地删除这个分支了：
+
+git checkout develop
+git merge issue-#001
+git push
+git branch -d issue-#001
+
+### 下一站
+
+到了这里，但愿你对[集中式工作流](http://blog.jobbole.com/76847/?_blank)、功能分支工作流和Gitflow工作流已经感觉很舒适了。你应该也牢固的掌握了本地仓库的潜能，push/pull模式和Git健壮的分支和合并模型。
+
+记住，这里演示的工作流只是可能用法的例子，而不是在实际工作中使用Git不可违逆的条例。所以不要畏惧按自己需要对工作流的用法做取舍。不变的目标就是让Git为你所用。
+
+
